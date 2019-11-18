@@ -1,14 +1,27 @@
 module.exports = () => {
+    /* TODOS
+     * Make one unified route for verifying registration and login
+     * Implement email
+     * Create a verifying route that only takes a token as verification (for email later)
+     * 
+     */
+
+
+
     const express = require("express");
     const app = express();
     const mongoose = require("mongoose");
+    const cors = require("cors");
     const authentication = require("./Authentication");
     const models = require("./MongooseModels");
+
+
     startExpress();
 
     function startExpress() {
         const port = process.env.PORT || "8000";
         app.use(express.json());
+        app.use(cors());
         app.listen(port, () => console.log("Port: " + port))
 
         return app;
@@ -20,16 +33,20 @@ module.exports = () => {
     } = models;
 
 
-    app.post("/confirmUser", async (req, res) => {
+    app.post("/verifyRegistration", async (req, res) => {
+        console.log("verifyRegistration");
         try {
             const {
-                userToken,
+                token,
                 verificationCode
             } = req.body;
-            if (!userToken) {
+            console.log(req.body);
+            console.log(verificationCode);
+            console.log(Boolean(verificationCode));
+            if (!token) {
                 res.json({
                     error: true,
-                    message: "missing userToken from body"
+                    message: "token was undefined"
                 });
                 return;
             }
@@ -40,7 +57,7 @@ module.exports = () => {
                 });
                 return;
             }
-            const decodedUser = await authentication.decodeJsonToken(userToken);
+            const decodedUser = await authentication.decodeJsonToken(token);
             const {
                 name,
                 email
@@ -78,7 +95,7 @@ module.exports = () => {
     });
 
     app.post("/registerUser", async (req, res) => {
-        console.log("request");
+        console.log("registerUser", req.body);
         try {
 
             const {
@@ -110,11 +127,14 @@ module.exports = () => {
     });
 
     app.post("/login", async (req, res) => {
+        console.log("login")
         try {
             const {
                 email
             } = req.body;
-            if (!checkIfEmailExists(email)) {
+            console.log(req.body);
+            if (!await checkIfEmailExists(email)) {
+                console.log("email doesn't exist")
                 res.json({
                     error: true,
                     message: "NoAccount"
@@ -148,14 +168,15 @@ module.exports = () => {
         }
     });
 
-    app.post("/confirmLogin", async (req, res) => {
+    app.post("/verifyLogin", async (req, res) => {
+        console.log("verifyLogin")
         try {
             const {
                 token,
                 verificationCode
             } = req.body;
             const tokenData = await authentication.decodeJsonToken(token);
-            console.log(verificationCode);
+            console.log("166", verificationCode);
             console.log(tokenData);
             if (tokenData.verificationCode == verificationCode) {
                 const email = tokenData.email;
@@ -189,7 +210,8 @@ module.exports = () => {
             const user = await User.findOne({
                 email: email
             });
-            return user;
+            console.log(Boolean(user));
+            return Boolean(user);
         } catch (err) {
             console.log(err);
         }
