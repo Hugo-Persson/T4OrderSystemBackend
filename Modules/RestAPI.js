@@ -224,54 +224,53 @@ module.exports = () => {
         });
         return newUser.save();
     }
-}
 
-app.post("/verifyLogin", async (req, res) => {
-    console.log("verifyLogin")
-    try {
-        const {
-            token,
-            verificationCode
-        } = req.body;
-        const tokenData = await authentication.decodeJsonToken(token);
-        console.log("166", verificationCode);
-        console.log(tokenData);
-        if (tokenData.verificationCode == verificationCode) {
-            const email = tokenData.email;
-            const auth = await authentication.createAuthToken(email);
-            res.json({
-                error: false,
-                data: {
-                    auth: auth
-                }
-            });
-        } else {
-            res.json({
-                error: true,
-                message: "Wrong verification code"
-            })
+    app.post("/verifyLogin", async (req, res) => {
+        console.log("verifyLogin")
+        try {
+            const {
+                token,
+                verificationCode
+            } = req.body;
+            const tokenData = await authentication.decodeJsonToken(token);
+            console.log("166", verificationCode);
+            console.log(tokenData);
+            if (tokenData.verificationCode == verificationCode) {
+                const email = tokenData.email;
+                const auth = await authentication.createAuthToken(email);
+                res.json({
+                    error: false,
+                    data: {
+                        auth: auth
+                    }
+                });
+            } else {
+                res.json({
+                    error: true,
+                    message: "Wrong verification code"
+                })
+            }
+        } catch (err) {
+            console.log(err)
         }
-    } catch (err) {
-        console.log(err)
+
+    });
+
+    app.post("/registerOrder", (req, res) => {});
+
+    function getVerificationCode() {
+        return Math.round(Math.random() * 1000000);
+
     }
-
-});
-
-app.post("/registerOrder", (req, res) => {});
-
-function getVerificationCode() {
-    return Math.round(Math.random() * 1000000);
-
-}
-async function checkIfEmailExists(email) {
-    try {
-        const user = await User.findOne({
-            email: email
-        });
-        console.log(Boolean(user));
-        return Boolean(user);
-    } catch (err) {
-        console.log(err);
+    async function checkIfEmailExists(email) {
+        try {
+            const user = await User.findOne({
+                email: email
+            });
+            console.log(Boolean(user));
+            return Boolean(user);
+        } catch (err) {
+            console.log(err);
+        }
     }
-}
 }
