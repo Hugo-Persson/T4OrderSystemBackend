@@ -3,6 +3,7 @@ module.exports = () => {
      * Make one unified route for verifying registration and login
      * Implement email
      * Create a verifying route that only takes a token as verification (for email later)
+     * Make better tokens with type prop
      * 
      */
 
@@ -14,6 +15,7 @@ module.exports = () => {
     const cors = require("cors");
     const authentication = require("./Authentication");
     const models = require("./MongooseModels");
+    const sendEmail = require("./Email");
 
 
     startExpress();
@@ -146,7 +148,11 @@ module.exports = () => {
             }); */
             const verificationCode = getVerificationCode();
             console.log("Ver code", verificationCode);
+
+            const info = await sendEmail.sendVerificationCode(email, verificationCode);
+
             const token = await authentication.createJsonToken({
+                type: "verifyLogin",
                 email: email,
                 verificationCode: verificationCode
             });
@@ -168,52 +174,104 @@ module.exports = () => {
         }
     });
 
-    app.post("/verifyLogin", async (req, res) => {
-        console.log("verifyLogin")
+    app.post("/verifyWithCode", async (req, res) => {
+        console.log("verify with code");
         try {
             const {
                 token,
                 verificationCode
             } = req.body;
-            const tokenData = await authentication.decodeJsonToken(token);
-            console.log("166", verificationCode);
-            console.log(tokenData);
-            if (tokenData.verificationCode == verificationCode) {
-                const email = tokenData.email;
-                const auth = await authentication.createAuthToken(email);
+            const tokenData = authentication.decodeJsonToken(token);
+            const {
+                email,
+                name,
+                type
+            } = tokenData;
+            if (tokenData.verificationCode !== verificationCode) {
                 res.json({
-                    error: false,
-                    data: {
-                        auth: auth
-                    }
+                    error: true,
+                    message: "Wrong verificationCode"
                 });
+                return;
+            }
+            if (type !== "VerifyLogin" && type !== "VerifyRegistration") {
+                res.json({
+                    error: true,
+                    message: "Invalid token"
+                });
+            }
+            if (type === "VerifyRegistration") {
+                await createAccount(email, name, false);
             } else {
                 res.json({
                     error: true,
-                    message: "Wrong verification code"
-                })
+                    message: "Invalid token"
+                });
             }
         } catch (err) {
-            console.log(err)
-        }
-
-    });
-
-    app.post("/registerOrder", (req, res) => {});
-
-    function getVerificationCode() {
-        return Math.round(Math.random() * 1000000);
-
-    }
-    async function checkIfEmailExists(email) {
-        try {
-            const user = await User.findOne({
-                email: email
+            res.json({
+                error: true
             });
-            console.log(Boolean(user));
-            return Boolean(user);
-        } catch (err) {
             console.log(err);
         }
+    });
+
+    function createAccount(email, name, admin) {
+        const newUser = new User({
+            name: name,
+            email: email,
+            admin: admin
+        });
+        return newUser.save();
     }
+}
+
+app.post("/verifyLogin", async (req, res) => {
+    console.log("verifyLogin")
+    try {
+        const {
+            token,
+            verificationCode
+        } = req.body;
+        const tokenData = await authentication.decodeJsonToken(token);
+        console.log("166", verificationCode);
+        console.log(tokenData);
+        if (tokenData.verificationCode == verificationCode) {
+            const email = tokenData.email;
+            const auth = await authentication.createAuthToken(email);
+            res.json({
+                error: false,
+                data: {
+                    auth: auth
+                }
+            });
+        } else {
+            res.json({
+                error: true,
+                message: "Wrong verification code"
+            })
+        }
+    } catch (err) {
+        console.log(err)
+    }
+
+});
+
+app.post("/registerOrder", (req, res) => {});
+
+function getVerificationCode() {
+    return Math.round(Math.random() * 1000000);
+
+}
+async function checkIfEmailExists(email) {
+    try {
+        const user = await User.findOne({
+            email: email
+        });
+        console.log(Boolean(user));
+        return Boolean(user);
+    } catch (err) {
+        console.log(err);
+    }
+}
 }
