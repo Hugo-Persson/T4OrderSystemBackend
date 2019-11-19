@@ -16,6 +16,7 @@ module.exports = () => {
     const authentication = require("./Authentication");
     const models = require("./MongooseModels");
     const sendEmail = require("./Email");
+    const cookieParser = require("cookie-parser");
 
 
     startExpress();
@@ -24,6 +25,7 @@ module.exports = () => {
         const port = process.env.PORT || "8000";
         app.use(express.json());
         app.use(cors());
+        app.use(cookieParser());
         app.listen(port, () => console.log("Port: " + port))
 
         return app;
@@ -174,6 +176,12 @@ module.exports = () => {
         }
     });
 
+    app.post("/checkAuth", verifyAuth, (req, res) => {
+        res.json({
+            authenticade: true
+        });
+    });
+
     app.post("/verifyWithCode", async (req, res) => {
         console.log("verify with code");
         try {
@@ -202,12 +210,16 @@ module.exports = () => {
             }
             if (type === "VerifyRegistration") {
                 await createAccount(email, name, false);
-            } else {
-                res.json({
-                    error: true,
-                    message: "Invalid token"
-                });
             }
+            const authToken = await authentication.createAuthToken(email);
+            res.cookie("auth", authToken, {
+                expires: new Date(Date.now + (2 * 3600 * 1000)),
+                httpOnly: true
+            });
+            res.json({
+                error: false
+            });
+
         } catch (err) {
             res.json({
                 error: true
@@ -272,5 +284,36 @@ module.exports = () => {
         } catch (err) {
             console.log(err);
         }
+    }
+
+
+    /* Middleware */
+    function verifyAuth(req, res, next) {
+        try {
+            if (req.cookies.auth === undefined) {
+                res.json({
+                    error: true,
+                    message: "NoAuth"
+                });
+                return;
+            }
+            const authData = await authentication.decodeJsonToken(req.cookies.auth);
+            if (authData.type === "auth") {
+                next();
+                return;
+            }
+            res.json({
+                error: true,
+                message: "NoAuth"
+            });
+        } catch (err) {
+            console.log(err)
+            res.json({
+                error: true,
+                message: "NoAuth"
+            });
+            next();
+        }
+
     }
 }

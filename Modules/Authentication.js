@@ -23,6 +23,7 @@ async function createJsonToken(data) {
 
 async function createAuthToken(email) {
     return createJsonToken({
+        type: "auth",
         email: email
     });
 }
