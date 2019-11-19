@@ -150,9 +150,9 @@ module.exports = () => {
             }); */
             const verificationCode = getVerificationCode();
             console.log("Ver code", verificationCode);
-
+            console.log(sendEmail);
             const info = await sendEmail.sendVerificationCode(email, verificationCode);
-
+            console.log(info);
             const token = await authentication.createJsonToken({
                 type: "verifyLogin",
                 email: email,
@@ -288,7 +288,7 @@ module.exports = () => {
 
 
     /* Middleware */
-    function verifyAuth(req, res, next) {
+    async function verifyAuth(req, res, next) {
         try {
             if (req.cookies.auth === undefined) {
                 res.json({

@@ -1,25 +1,22 @@
 const nodemailer = require("nodemailer");
 
 module.exports = {
-    sendVerificationCode: sendVerificationCode,
+    sendVerificationCode: sendVerificationCode
 }
-
 const transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
+    service: "gmail",
     auth: {
-        user: 'giovanna.vandervort24@ethereal.email',
-        pass: 'xz8cAppugdFFPegqjd'
+        user: "nor82879@gmail.com",
+        pass: process.env.EMAILPASS
     }
 });
 
-
-function sendVerificationCode(to, verificationCode) {
+function sendVerificationCode(to, code) {
     const mailOptions = {
-        from: "test@test.com",
+        from: "noreply@something.com",
         to: to,
         subject: "Verification code",
-        text: `Your verification code is ${verificationCode}`
+        text: "Your code is: " + code
     }
     return transporter.sendMail(mailOptions);
 }
