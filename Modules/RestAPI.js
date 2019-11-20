@@ -23,8 +23,13 @@ module.exports = () => {
 
     function startExpress() {
         const port = process.env.PORT || "8000";
+        const corsOptions = {
+            origin: true,
+            credentials: true,
+        }
         app.use(express.json());
-        app.use(cors());
+        app.use(cors(corsOptions));
+
         app.use(cookieParser());
         app.listen(port, () => console.log("Port: " + port))
 
@@ -107,13 +112,14 @@ module.exports = () => {
                 email
             } = req.body;
             const verificationCode = getVerificationCode();
-            const user = {
+            const tokenData = {
+                type: "verifyRegistration",
                 name: name,
                 email: email,
                 verificationCode: verificationCode
             };
             console.log(verificationCode);
-            const token = await authentication.createJsonToken(user);
+            const token = await authentication.createJsonToken(tokenData);
             res.json({
                 error: false,
                 data: {
@@ -176,9 +182,17 @@ module.exports = () => {
         }
     });
 
-    app.post("/checkAuth", verifyAuth, (req, res) => {
+    app.post("/checkAccount", verifyAuth, (req, res) => {
+        console.log("checkAccount");
+        const tokenData = authentication.decodeJsonToken(req.cookies.auth);
+        const user = User.findOne({
+            email: tokenData.email
+        });
         res.json({
-            authenticade: true
+            authenticated: true,
+            admin: user.admin,
+            name: user.name,
+            email: user.email
         });
     });
 
@@ -189,35 +203,52 @@ module.exports = () => {
                 token,
                 verificationCode
             } = req.body;
-            const tokenData = authentication.decodeJsonToken(token);
+            if (token === undefined) {
+                res.json({
+                    error: true,
+                    message: "Token was undefined"
+                });
+                return;
+            }
+            const tokenData = await authentication.decodeJsonToken(token);
+
             const {
                 email,
                 name,
                 type
             } = tokenData;
-            if (tokenData.verificationCode !== verificationCode) {
+            console.log(tokenData);
+
+            if (tokenData.verificationCode != verificationCode) {
                 res.json({
                     error: true,
                     message: "Wrong verificationCode"
                 });
                 return;
             }
-            if (type !== "VerifyLogin" && type !== "VerifyRegistration") {
+            if (type !== "verifyLogin" && type !== "verifyRegistration") {
                 res.json({
                     error: true,
                     message: "Invalid token"
                 });
+                return;
             }
-            if (type === "VerifyRegistration") {
+            if (type === "verifyRegistration") {
                 await createAccount(email, name, false);
+
             }
+
+            const user = await User.findOne({
+                email: email
+            });
+            console.log("user", user);
             const authToken = await authentication.createAuthToken(email);
             res.cookie("auth", authToken, {
-                expires: new Date(Date.now + (2 * 3600 * 1000)),
-                httpOnly: true
+
             });
             res.json({
-                error: false
+                error: false,
+                admin: user.admin
             });
 
         } catch (err) {

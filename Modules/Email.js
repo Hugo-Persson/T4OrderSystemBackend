@@ -16,7 +16,16 @@ function sendVerificationCode(to, code) {
         from: "noreply@something.com",
         to: to,
         subject: "Verification code",
-        text: "Your code is: " + code
+        html: codeEmailBody(code)
     }
     return transporter.sendMail(mailOptions);
+}
+
+function codeEmailBody(code) {
+    return `
+    <div>
+    <h2><b>Your verification code is <span style="text-decoration:underline">${code}</span></b></h2>
+
+    </div>
+    `
 }
