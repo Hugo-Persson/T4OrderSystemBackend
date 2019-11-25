@@ -17,6 +17,10 @@ module.exports = () => {
     const models = require("./MongooseModels");
     const sendEmail = require("./Email");
     const cookieParser = require("cookie-parser");
+    const multer = require("multer");
+    const upload = multer({
+        dest: "uploads/"
+    })
 
 
     startExpress();
@@ -156,9 +160,7 @@ module.exports = () => {
             }); */
             const verificationCode = getVerificationCode();
             console.log("Ver code", verificationCode);
-            console.log(sendEmail);
             const info = await sendEmail.sendVerificationCode(email, verificationCode);
-            console.log(info);
             const token = await authentication.createJsonToken({
                 type: "verifyLogin",
                 email: email,
@@ -182,12 +184,14 @@ module.exports = () => {
         }
     });
 
-    app.post("/checkAccount", verifyAuth, (req, res) => {
+    app.post("/checkAccount", verifyAuth, async (req, res) => {
         console.log("checkAccount");
-        const tokenData = authentication.decodeJsonToken(req.cookies.auth);
-        const user = User.findOne({
+        const tokenData = await authentication.decodeJsonToken(req.cookies.auth);
+        const user = await User.findOne({
             email: tokenData.email
         });
+
+        console.log(user);
         res.json({
             authenticated: true,
             admin: user.admin,
@@ -217,7 +221,6 @@ module.exports = () => {
                 name,
                 type
             } = tokenData;
-            console.log(tokenData);
 
             if (tokenData.verificationCode != verificationCode) {
                 res.json({
@@ -268,38 +271,13 @@ module.exports = () => {
         return newUser.save();
     }
 
-    app.post("/verifyLogin", async (req, res) => {
-        console.log("verifyLogin")
-        try {
-            const {
-                token,
-                verificationCode
-            } = req.body;
-            const tokenData = await authentication.decodeJsonToken(token);
-            console.log("166", verificationCode);
-            console.log(tokenData);
-            if (tokenData.verificationCode == verificationCode) {
-                const email = tokenData.email;
-                const auth = await authentication.createAuthToken(email);
-                res.json({
-                    error: false,
-                    data: {
-                        auth: auth
-                    }
-                });
-            } else {
-                res.json({
-                    error: true,
-                    message: "Wrong verification code"
-                })
-            }
-        } catch (err) {
-            console.log(err)
-        }
 
+
+    app.post("/makeOrder", upload.array("files", 12), (req, res) => {
+        console.log(req.files);
+        console.log(req.body);
     });
 
-    app.post("/registerOrder", (req, res) => {});
 
     function getVerificationCode() {
         return Math.round(Math.random() * 1000000);

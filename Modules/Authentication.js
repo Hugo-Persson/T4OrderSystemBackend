@@ -31,7 +31,6 @@ async function createAuthToken(email) {
 async function decodeJsonToken(token) {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log(token);
             const decodedToken = jwt.verify(token, tokenSecret);
             resolve(decodedToken);
         } catch (err) {
