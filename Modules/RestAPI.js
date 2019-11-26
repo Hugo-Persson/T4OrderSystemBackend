@@ -42,70 +42,11 @@ module.exports = () => {
 
 
     const {
-        User
+        User,
+        Order
     } = models;
 
 
-    app.post("/verifyRegistration", async (req, res) => {
-        console.log("verifyRegistration");
-        try {
-            const {
-                token,
-                verificationCode
-            } = req.body;
-            console.log(req.body);
-            console.log(verificationCode);
-            console.log(Boolean(verificationCode));
-            if (!token) {
-                res.json({
-                    error: true,
-                    message: "token was undefined"
-                });
-                return;
-            }
-            if (!verificationCode) {
-                res.json({
-                    error: true,
-                    message: "missing verificationCode from body"
-                });
-                return;
-            }
-            const decodedUser = await authentication.decodeJsonToken(token);
-            const {
-                name,
-                email
-            } = decodedUser;
-            if (verificationCode == decodedUser.verificationCode) {
-                // User has verified email
-                const newUser = new User({
-                    name: name,
-                    email: email,
-                    admin: false
-                });
-
-                await newUser.save();
-                const auth = await authentication.createAuthToken(email);
-                res.json({
-                    error: false,
-                    message: "User added",
-                    data: {
-                        auth: auth
-                    }
-                });
-
-            } else {
-                res.json({
-                    error: true,
-                    message: "Wrong verification code"
-                });
-            }
-        } catch (err) {
-            res.json({
-                error: true,
-                message: err
-            });
-        }
-    });
 
     app.post("/registerUser", async (req, res) => {
         console.log("registerUser", req.body);
@@ -273,11 +214,70 @@ module.exports = () => {
 
 
 
-    app.post("/makeOrder", upload.array("files", 12), (req, res) => {
+    app.post("/makeOrder", upload.array("files", 12), async (req, res) => {
+
+
+        try {
+            const {
+                productName,
+                customer,
+                responsible,
+                production,
+                productionDocumentation,
+                calculation,
+                productDescription,
+                wishes,
+                fileDescriptions
+            } = req.body
+            console.log(req.body);
+
+            const files = req.files.map((value, index) => {
+                return {
+                    path: value.path,
+                    originalName: value.originalname,
+                    description: fileDescriptions[index]
+                }
+            })
+            const order = new Order({
+                productName: productName,
+                customer: customer,
+                responsible: responsible,
+                missionType: {
+                    production: production == "on",
+                    productDescription: productDescription == "on",
+                    calculation: calculation == "on",
+
+
+                },
+                productDescription: productDescription,
+                wishes: wishes,
+                files: files
+
+            });
+            await order.save();
+            res.json({
+                error: false
+            });
+        } catch (err) {
+            console.log(err)
+        }
         console.log(req.files);
         console.log(req.body);
     });
 
+    app.post("/getOrder", async (req, res) => {
+        // Can not send files in same route so the /getOrderFile will handle giving the files
+        try {
+            const orders = await User.find();
+            console.log(orders);
+        } catch (err) {
+            console.log(err)
+        }
+    });
+    app.post("/getOrderFile", (req, res) => {
+
+
+    });
 
     function getVerificationCode() {
         return Math.round(Math.random() * 1000000);
