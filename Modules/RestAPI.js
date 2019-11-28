@@ -215,8 +215,7 @@ module.exports = () => {
 
 
     app.post("/makeOrder", upload.array("files", 12), async (req, res) => {
-
-
+        console.log("Make order");
         try {
             const {
                 productName,
@@ -296,8 +295,18 @@ module.exports = () => {
             console.log(err)
         }
     });
-    app.post("/getFile/:token", (req, res) => {
+    app.post("/getFile/:token", async (req, res) => {
+        try {
+            const tokenData = await authentication.decodeJsonToken(req.params.token);
+            const {
+                path,
+                originalName
+            } = tokenData;
+            res.download(path, originalName);
 
+        } catch (err) {
+            console.log(err)
+        }
 
     });
 
