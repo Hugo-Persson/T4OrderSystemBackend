@@ -259,22 +259,44 @@ module.exports = () => {
                 error: false
             });
         } catch (err) {
-            console.log(err)
+            console.log(err);
+            res.json({
+                error: true
+            });
         }
         console.log(req.files);
         console.log(req.body);
     });
 
-    app.post("/getOrder", async (req, res) => {
+    app.post("/getAllOrders", async (req, res) => {
         // Can not send files in same route so the /getOrderFile will handle giving the files
         try {
-            const orders = await User.find();
+            const orders = await Order.find();
+            const responseOrders = orders.map(value => {
+                // I need to format the files so the client can download them
+                value.files = value.files.map(async file => {
+                    const fileToken = await authentication.createJsonToken({
+                        path: file.path,
+                        originalName: file.originalName
+                    });
+                    const fileUrl = "/getFile/" + fileToken;
+                    return {
+                        url: fileUrl,
+                        description: file.description
+                    }
+                });
+                return value;
+            });
+            res.json({
+                error: false,
+                data: responseOrders
+            });
             console.log(orders);
         } catch (err) {
             console.log(err)
         }
     });
-    app.post("/getOrderFile", (req, res) => {
+    app.post("/getFile/:token", (req, res) => {
 
 
     });
