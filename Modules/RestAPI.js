@@ -243,10 +243,8 @@ module.exports = () => {
                 responsible: responsible,
                 missionType: {
                     production: production == "on",
-                    productDescription: productDescription == "on",
+                    productionDocumentation: productionDocumentation == "on",
                     calculation: calculation == "on",
-
-
                 },
                 productDescription: productDescription,
                 wishes: wishes,
@@ -268,34 +266,61 @@ module.exports = () => {
     });
 
     app.post("/getAllOrders", async (req, res) => {
-        // Can not send files in same route so the /getOrderFile will handle giving the files
         try {
-            const orders = await Order.find();
-            const responseOrders = orders.map(value => {
-                // I need to format the files so the client can download them
-                value.files = value.files.map(async file => {
-                    const fileToken = await authentication.createJsonToken({
-                        path: file.path,
-                        originalName: file.originalName
-                    });
-                    const fileUrl = "/getFile/" + fileToken;
-                    return {
-                        url: fileUrl,
-                        description: file.description
-                    }
-                });
-                return value;
+            // Lean turns the mongoose object in to a normal js object
+            const orders = await Order.find().setOptions({
+                lean: true
             });
+
+            console.log("Files", orders[1].files);
+            const responseOrdersPromises = orders.map(value => {
+
+                // I need to format the files so the client can download them
+                // I need to use promises because the loops is async 
+                return new Promise(async resolve => {
+                    const filesReturnPromise = value.files.map(async file => {
+                        return new Promise(async resolve => {
+                            const fileToken = await authentication.createJsonToken({
+                                path: file.path,
+                                originalName: file.originalName
+                            });
+                            const fileUrl = "/getFile/" + fileToken;
+                            const returnObject = {
+                                url: fileUrl,
+                                description: file.description
+                            };
+                            resolve(returnObject);
+                        });
+                    });
+                    const files = await Promise.all(filesReturnPromise);
+                    const returnValue = {
+                        ...value
+                    };
+                    console.log("File return", files);
+                    // delete value.files;
+                    returnValue.files = files;
+                    console.log("Value", returnValue);
+
+
+
+
+                    resolve(returnValue);
+                });
+
+            });
+            const responseOrders = await Promise.all(responseOrdersPromises);
+            console.log("Return", responseOrders[1].files);
+            console.log("reOrders", responseOrders);
             res.json({
                 error: false,
                 data: responseOrders
             });
-            console.log(orders);
+            // console.log(orders);
         } catch (err) {
             console.log(err)
         }
     });
-    app.post("/getFile/:token", async (req, res) => {
+    app.get("/getFile/:token", async (req, res) => {
         try {
             const tokenData = await authentication.decodeJsonToken(req.params.token);
             const {
