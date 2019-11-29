@@ -188,6 +188,8 @@ module.exports = () => {
             console.log("user", user);
             const authToken = await authentication.createAuthToken(email);
             res.cookie("auth", authToken, {
+                httpOnly: true,
+                expires: new Date(Date.now() + 2 * 3600000),
 
             });
             res.json({
