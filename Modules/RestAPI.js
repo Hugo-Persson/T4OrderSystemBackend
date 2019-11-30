@@ -15,9 +15,9 @@ module.exports = () => {
     const cors = require("cors");
     const authentication = require("./Authentication");
     const models = require("./MongooseModels");
-    const sendEmail = require("./Email");
     const cookieParser = require("cookie-parser");
     const multer = require("multer");
+    const bcrypt = require("bcryptjs");
     const upload = multer({
         dest: "uploads/"
     })
@@ -36,11 +36,11 @@ module.exports = () => {
 
         app.use(cookieParser());
         app.listen(port, () => console.log("Port: " + port))
-
+        require("./AuthRoutes")(app);
         return app;
     }
 
-
+    // Models
     const {
         User,
         Order
@@ -48,82 +48,7 @@ module.exports = () => {
 
 
 
-    app.post("/registerUser", async (req, res) => {
-        console.log("registerUser", req.body);
-        try {
 
-            const {
-                name,
-                email
-            } = req.body;
-            const verificationCode = getVerificationCode();
-            const tokenData = {
-                type: "verifyRegistration",
-                name: name,
-                email: email,
-                verificationCode: verificationCode
-            };
-            console.log(verificationCode);
-            const token = await authentication.createJsonToken(tokenData);
-            res.json({
-                error: false,
-                data: {
-                    token: token
-                },
-                message: "Verify your email"
-            });
-        } catch (err) {
-            console.log(err);
-            res.json({
-                error: true,
-                message: err
-            });
-        }
-    });
-
-    app.post("/login", async (req, res) => {
-        console.log("login")
-        try {
-            const {
-                email
-            } = req.body;
-            console.log(req.body);
-            if (!await checkIfEmailExists(email)) {
-                console.log("email doesn't exist")
-                res.json({
-                    error: true,
-                    message: "NoAccount"
-                });
-                return;
-            }
-            /* const user = await User.findOne({
-                email: email
-            }); */
-            const verificationCode = getVerificationCode();
-            console.log("Ver code", verificationCode);
-            const info = await sendEmail.sendVerificationCode(email, verificationCode);
-            const token = await authentication.createJsonToken({
-                type: "verifyLogin",
-                email: email,
-                verificationCode: verificationCode
-            });
-
-            res.json({
-                error: false,
-                message: "Email sent with verification code",
-                data: {
-                    token: token
-                }
-            });
-
-
-        } catch (err) {
-            res.json({
-                error: true
-            });
-            console.log(err);
-        }
-    });
 
     app.post("/checkAccount", verifyAuth, async (req, res) => {
         console.log("checkAccount");
@@ -141,69 +66,7 @@ module.exports = () => {
         });
     });
 
-    app.post("/verifyWithCode", async (req, res) => {
-        console.log("verify with code");
-        try {
-            const {
-                token,
-                verificationCode
-            } = req.body;
-            if (token === undefined) {
-                res.json({
-                    error: true,
-                    message: "Token was undefined"
-                });
-                return;
-            }
-            const tokenData = await authentication.decodeJsonToken(token);
 
-            const {
-                email,
-                name,
-                type
-            } = tokenData;
-
-            if (tokenData.verificationCode != verificationCode) {
-                res.json({
-                    error: true,
-                    message: "Wrong verificationCode"
-                });
-                return;
-            }
-            if (type !== "verifyLogin" && type !== "verifyRegistration") {
-                res.json({
-                    error: true,
-                    message: "Invalid token"
-                });
-                return;
-            }
-            if (type === "verifyRegistration") {
-                await createAccount(email, name, false);
-
-            }
-
-            const user = await User.findOne({
-                email: email
-            });
-            console.log("user", user);
-            const authToken = await authentication.createAuthToken(email);
-            res.cookie("auth", authToken, {
-                httpOnly: true,
-                expires: new Date(Date.now() + 2 * 3600000),
-
-            });
-            res.json({
-                error: false,
-                admin: user.admin
-            });
-
-        } catch (err) {
-            res.json({
-                error: true
-            });
-            console.log(err);
-        }
-    });
 
     function createAccount(email, name, admin) {
         const newUser = new User({
@@ -267,7 +130,7 @@ module.exports = () => {
         console.log(req.body);
     });
 
-    app.post("/getAllOrders", async (req, res) => {
+    app.post("/getAllOrders", verifyAuth, async (req, res) => {
         try {
             // Lean turns the mongoose object in to a normal js object
             const orders = await Order.find().setOptions({
@@ -337,21 +200,8 @@ module.exports = () => {
 
     });
 
-    function getVerificationCode() {
-        return Math.round(Math.random() * 1000000);
 
-    }
-    async function checkIfEmailExists(email) {
-        try {
-            const user = await User.findOne({
-                email: email
-            });
-            console.log(Boolean(user));
-            return Boolean(user);
-        } catch (err) {
-            console.log(err);
-        }
-    }
+
 
 
     /* Middleware */
