@@ -66,35 +66,24 @@ module.exports = () => {
         });
     });
 
-
-
-    function createAccount(email, name, admin) {
-        const newUser = new User({
-            name: name,
-            email: email,
-            admin: admin
-        });
-        return newUser.save();
-    }
-
-
-
-    app.post("/makeOrder", upload.array("files", 12), async (req, res) => {
+    app.post("/makeOrder", verifyAuth, upload.array("files", 12), async (req, res) => {
         console.log("Make order");
         try {
             const {
                 productName,
                 customer,
-                responsible,
+                // responsible,
                 production,
                 productionDocumentation,
                 calculation,
                 productDescription,
                 wishes,
-                fileDescriptions
-            } = req.body
-            console.log(req.body);
 
+            } = req.body
+            const number = await Order.countDocuments() + 1;
+            const authData = await authentication.decodeJsonToken(req.cookies.auth);
+            const customerEmail = authData.email;
+            const fileDescriptions = req.body.fileDescriptions.split(",");
             const files = req.files.map((value, index) => {
                 return {
                     path: value.path,
@@ -103,9 +92,12 @@ module.exports = () => {
                 }
             })
             const order = new Order({
+                number: number,
                 productName: productName,
-                customer: customer,
-                responsible: responsible,
+                customer: {
+                    name: customer,
+                    email: customerEmail
+                },
                 missionType: {
                     production: production == "on",
                     productionDocumentation: productionDocumentation == "on",
@@ -130,14 +122,13 @@ module.exports = () => {
         console.log(req.body);
     });
 
-    app.post("/getAllOrders", verifyAuth, async (req, res) => {
+    app.post("/getAllOrders", verifyAuth, checkAdminAuth, async (req, res) => {
         try {
             // Lean turns the mongoose object in to a normal js object
             const orders = await Order.find().setOptions({
                 lean: true
             });
 
-            console.log("Files", orders[1].files);
             const responseOrdersPromises = orders.map(value => {
 
                 // I need to format the files so the client can download them
@@ -151,6 +142,7 @@ module.exports = () => {
                             });
                             const fileUrl = "/getFile/" + fileToken;
                             const returnObject = {
+                                originalName: file.originalName,
                                 url: fileUrl,
                                 description: file.description
                             };
@@ -174,7 +166,6 @@ module.exports = () => {
 
             });
             const responseOrders = await Promise.all(responseOrdersPromises);
-            console.log("Return", responseOrders[1].files);
             console.log("reOrders", responseOrders);
             res.json({
                 error: false,
@@ -185,7 +176,7 @@ module.exports = () => {
             console.log(err)
         }
     });
-    app.get("/getFile/:token", async (req, res) => {
+    app.get("/getFile/:token", verifyAuth, checkAdminAuth, async (req, res) => {
         try {
             const tokenData = await authentication.decodeJsonToken(req.params.token);
             const {
@@ -205,6 +196,23 @@ module.exports = () => {
 
 
     /* Middleware */
+
+    async function checkAdminAuth(req, res, next) {
+        try {
+            const authData = await authentication.decodeJsonToken(req.cookies.auth);
+            console.log(authData);
+            if (authData.admin) {
+                next();
+            } else {
+                res.json({
+                    error: true,
+                    message: "NotAdmin"
+                });
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
     async function verifyAuth(req, res, next) {
         try {
             if (req.cookies.auth === undefined) {

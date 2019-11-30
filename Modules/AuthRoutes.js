@@ -17,7 +17,14 @@ module.exports = app => {
                 name,
                 email
             } = req.body;
-            const verificationCode = await getVerificationCode();
+            if (checkIfEmailExists(email)) {
+                res.json({
+                    error: true,
+                    message: "AccountExists"
+                });
+            }
+
+            const verificationCode = await getVerificationCode(email);
             const tokenData = {
                 type: "verifyRegistration",
                 name: name,
@@ -62,9 +69,8 @@ module.exports = app => {
             /* const user = await User.findOne({
                 email: email
             }); */
-            const verificationCode = await getVerificationCode();
+            const verificationCode = await getVerificationCode(email);
             console.log("Ver code", verificationCode);
-            const info = await sendEmail.sendVerificationCode(email, verificationCode);
             const token = await authentication.createJsonToken({
                 type: "verifyLogin",
                 email: email,
@@ -131,7 +137,7 @@ module.exports = app => {
                 email: email
             });
             console.log("user", user);
-            const authToken = await authentication.createAuthToken(email);
+            const authToken = await authentication.createAuthToken(email, user.admin);
             res.cookie("auth", authToken, {
                 httpOnly: true,
                 expires: new Date(Date.now() + 2 * 3600000),
@@ -150,10 +156,21 @@ module.exports = app => {
         }
     });
 
-    async function getVerificationCode() {
-        const code = Math.round(Math.random() * 1000000);
-        console.log("verCode", code);
-        return authentication.encrypt(code);
+    async function getVerificationCode(email) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const code = Math.round(Math.random() * 1000000);
+                console.log("verCode", code);
+                const info = await sendEmail.sendVerificationCode(email, code);
+
+                const encryptedCode = await authentication.encrypt(code);
+                resolve(encryptedCode);
+            } catch (err) {
+                console.log(err)
+                reject(err);
+            }
+        })
+
     }
     async function checkIfEmailExists(email) {
         try {
@@ -165,6 +182,15 @@ module.exports = app => {
         } catch (err) {
             console.log(err);
         }
+    }
+
+    function createAccount(email, name, admin) {
+        const newUser = new User({
+            name: name,
+            email: email,
+            admin: admin
+        });
+        return newUser.save();
     }
 
 }

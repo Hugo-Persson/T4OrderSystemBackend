@@ -11,12 +11,37 @@ const userSchema = new Schema({
     admin: Boolean,
     accessibleOrders: [String]
 })
+
 const User = new model("user", userSchema);
 
+
+
+
 const orderSchema = new Schema({
+    date: {
+        type: Date,
+        default: Date.now
+    },
+    number: String,
     productName: String,
-    customer: String,
-    responsible: String,
+    customer: {
+        name: String,
+        email: String
+    },
+    responsible: {
+        name: {
+            type: String,
+            default: "Ingen"
+        },
+        email: {
+            type: String,
+            default: ""
+        }
+    },
+    status: {
+        type: String,
+        default: "Ej påbörjad",
+    },
     missionType: {
         production: Boolean,
         productionDocumentation: Boolean,

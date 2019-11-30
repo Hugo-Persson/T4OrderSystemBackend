@@ -42,10 +42,11 @@ async function encrypt(data) {
 
 }
 
-async function createAuthToken(email) {
+async function createAuthToken(email, admin) {
     return createJsonToken({
         type: "auth",
-        email: email
+        email: email,
+        admin: admin
     });
 }
 
