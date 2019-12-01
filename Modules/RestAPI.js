@@ -118,8 +118,6 @@ module.exports = () => {
                 error: true
             });
         }
-        console.log(req.files);
-        console.log(req.body);
     });
 
     app.post("/getAllOrders", verifyAuth, checkAdminAuth, async (req, res) => {
@@ -189,6 +187,26 @@ module.exports = () => {
             console.log(err)
         }
 
+    });
+    app.post("/deleteOrder", async (req, res) => {
+        try {
+            const {
+                id
+            } = req.body;
+
+            const searchId = new mongoose.Types.ObjectId(id)
+
+            const order = await Order.findOne({
+                _id: searchId
+            });
+
+            await order.delete();
+            res.json({
+                error: false
+            });
+        } catch (err) {
+            console.log(err)
+        }
     });
 
 
