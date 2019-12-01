@@ -117,7 +117,7 @@ module.exports = app => {
             if (!await bcrypt.compare(verificationCode, tokenData.verificationCode)) {
                 res.json({
                     error: true,
-                    message: "Wrong verificationCode"
+                    message: "WrongCode"
                 });
                 return;
             }
