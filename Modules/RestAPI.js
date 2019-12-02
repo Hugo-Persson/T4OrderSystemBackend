@@ -37,6 +37,7 @@ module.exports = () => {
         app.use(cookieParser());
         app.listen(port, () => console.log("Port: " + port))
         require("./AuthRoutes")(app);
+        require("../StaticRouter")(app, express);
         return app;
     }
 
