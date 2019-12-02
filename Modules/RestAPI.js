@@ -209,6 +209,19 @@ module.exports = () => {
             console.log(err)
         }
     });
+    app.post("/logOut", (req, res) => {
+        try {
+            res.clearCookie("auth");
+            res.json({
+                error: false
+            });
+        } catch (err) {
+            console.log(err)
+            res.json({
+                error: true
+            });
+        }
+    });
 
 
 
