@@ -226,7 +226,10 @@ module.exports = () => {
     app.post("/getAllUsers", verifyAuth, checkAdminAuth, async (req, res) => {
         try {
             const users = await User.find();
-            res.json(users);
+            res.json({
+                error: false,
+                users: users
+            });
 
         } catch (err) {
             console.log(err)
