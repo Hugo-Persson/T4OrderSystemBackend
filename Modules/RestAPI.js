@@ -279,6 +279,29 @@ module.exports = () => {
 
     });
 
+    app.post("getMyOrders", verifyAuth, async (req, res) => {
+        try {
+            const authData = await authentication.decodeJsonToken(req.cookies.auth);
+            const orders = await orders.find({
+                customer: {
+                    email: authData.email
+                }
+            }, null, {
+                lean: true
+            });
+
+            console.log(orders);
+            res.json({
+                error: false,
+                orders: orders
+            });
+        } catch (err) {
+            console.log(err)
+            res.json({
+                error: true
+            });
+        }
+    });
 
 
     /* Middleware */
