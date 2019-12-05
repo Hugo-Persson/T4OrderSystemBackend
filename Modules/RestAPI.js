@@ -223,7 +223,52 @@ module.exports = () => {
         }
     });
 
+    app.post("/getAllUsers", verifyAuth, checkAdminAuth, async (req, res) => {
+        try {
+            const users = await User.find();
+            res.json(users);
 
+        } catch (err) {
+            console.log(err)
+        }
+    });
+
+    app.post("/deleteUser", verifyAuth, checkAdminAuth, async (req, res) => {
+        try {
+            const id = req.boyd.id;
+            const user = await User.deleteOne({
+                _id: mongoose.Types.ObjectId(id)
+            });
+            res.json({
+                error: false
+            });
+        } catch (err) {
+            console.log(err)
+            res.json({
+                error: true
+            });
+        }
+    });
+    app.post("/toggleUserAdmin", verifyAuth, checkAdminAuth, async (req, res) => {
+        try {
+            const id = req.body.id;
+            const user = await User.findOne({
+                _id: mongoose.Types.ObjectId(id)
+            });
+            user.admin = !user.admin;
+            await user.save();
+            res.json({
+                error: false
+            });
+        } catch (err) {
+            console.log(err)
+            res.json({
+                error: true
+            });
+
+        }
+
+    });
 
 
 
