@@ -161,7 +161,7 @@ module.exports = app => {
             try {
                 const code = Math.round(Math.random() * 1000000);
                 console.log("verCode", code);
-                const info = await sendEmail.sendVerificationCode(email, code);
+                // const info = await sendEmail.sendVerificationCode(email, code);
 
                 const encryptedCode = await authentication.encrypt(code);
                 resolve(encryptedCode);

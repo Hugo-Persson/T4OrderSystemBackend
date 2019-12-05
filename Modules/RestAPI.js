@@ -53,7 +53,13 @@ module.exports = () => {
 
     app.post("/checkAccount", verifyAuth, async (req, res) => {
         console.log("checkAccount");
+        try {
+
+        } catch (err) {
+            console.log(err)
+        }
         const tokenData = await authentication.decodeJsonToken(req.cookies.auth);
+
         const user = await User.findOne({
             email: tokenData.email
         });
