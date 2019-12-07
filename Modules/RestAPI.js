@@ -195,6 +195,30 @@ module.exports = () => {
         }
 
     });
+    app.post("/updateOrder", async (req, res) => {
+        console.log("Update order");
+        const {
+            id,
+            email,
+            name
+        } = req.body;
+        try {
+            const order = await Order.findOne({
+                _id: mongoose.Types.ObjectId(id)
+            });
+            order.name = name;
+            order.email = email;
+            await order.save();
+            res.json({
+                error: false
+            });
+        } catch (err) {
+            console.log(err)
+            res.json({
+                error: true
+            });
+        }
+    });
     app.post("/deleteOrder", async (req, res) => {
         try {
             const {
@@ -279,13 +303,13 @@ module.exports = () => {
 
     });
 
-    app.post("getMyOrders", verifyAuth, async (req, res) => {
+    app.post("/getMyOrders", verifyAuth, async (req, res) => {
         try {
+            console.log("getMyOrders");
             const authData = await authentication.decodeJsonToken(req.cookies.auth);
-            const orders = await orders.find({
-                customer: {
-                    email: authData.email
-                }
+            console.log("authData", authData.email);
+            const orders = await Order.find({
+                "customer.email": authData.email
             }, null, {
                 lean: true
             });
