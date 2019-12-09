@@ -87,7 +87,8 @@ module.exports = () => {
                 wishes,
 
             } = req.body
-            const number = await Order.countDocuments() + 1;
+            console.log("makeOrder body", req.body);
+            /*             const number = await Order.countDocuments() + 1; */
             const authData = await authentication.decodeJsonToken(req.cookies.auth);
             const customerEmail = authData.email;
             const fileDescriptions = req.body.fileDescriptions.split(",");
@@ -99,7 +100,6 @@ module.exports = () => {
                 }
             })
             const order = new Order({
-                number: number,
                 productName: productName,
                 customer: {
                     name: customer,
@@ -158,10 +158,8 @@ module.exports = () => {
                     const returnValue = {
                         ...value
                     };
-                    console.log("File return", files);
                     // delete value.files;
                     returnValue.files = files;
-                    console.log("Value", returnValue);
 
 
 
@@ -171,7 +169,6 @@ module.exports = () => {
 
             });
             const responseOrders = await Promise.all(responseOrdersPromises);
-            console.log("reOrders", responseOrders);
             res.json({
                 error: false,
                 data: responseOrders
