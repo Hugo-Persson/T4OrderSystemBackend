@@ -265,7 +265,7 @@ module.exports = () => {
 
     app.post("/deleteUser", verifyAuth, checkAdminAuth, async (req, res) => {
         try {
-            const id = req.boyd.id;
+            const id = req.body.id;
             const user = await User.deleteOne({
                 _id: mongoose.Types.ObjectId(id)
             });
