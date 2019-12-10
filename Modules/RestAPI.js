@@ -1,13 +1,4 @@
 module.exports = () => {
-    /* TODOS
-     * Make one unified route for verifying registration and login
-     * Implement email
-     * Create a verifying route that only takes a token as verification (for email later)
-     * Make better tokens with type prop
-     * 
-     */
-
-
 
     const express = require("express");
     const app = express();
@@ -55,23 +46,27 @@ module.exports = () => {
     app.post("/checkAccount", verifyAuth, async (req, res) => {
         console.log("checkAccount");
         try {
+            const tokenData = await authentication.decodeJsonToken(req.cookies.auth);
 
+            const user = await User.findOne({
+                email: tokenData.email
+            });
+            console.log(user);
+            res.json({
+                authenticated: true,
+                admin: user.admin,
+                name: user.name,
+                email: user.email
+            });
         } catch (err) {
-            console.log(err)
+            console.log(err);
+            res.json({
+                error: true
+            });
         }
-        const tokenData = await authentication.decodeJsonToken(req.cookies.auth);
 
-        const user = await User.findOne({
-            email: tokenData.email
-        });
 
-        console.log(user);
-        res.json({
-            authenticated: true,
-            admin: user.admin,
-            name: user.name,
-            email: user.email
-        });
+
     });
 
     app.post("/makeOrder", verifyAuth, upload.array("files", 12), async (req, res) => {
