@@ -948,7 +948,7 @@ var app = function () {
             c = e.file.description + "";
         return {
             c() {
-                t = C("li"), r = C("a"), l = $(i), a = x(), o = C("li"), s = $(c), k(r, "href", n = "http://localhost:8000" + e.file.url), k(t, "class", "list-group-item"), A(t, "border", "none"), k(o, "class", "list-group-item")
+                t = C("li"), r = C("a"), l = $(i), a = x(), o = C("li"), s = $(c), k(r, "href", n = e.file.url), k(t, "class", "list-group-item"), A(t, "border", "none"), k(o, "class", "list-group-item")
             },
             m(e, n) {
                 h(e, t, n), g(t, r), g(r, l), h(e, a, n), h(e, o, n), g(o, s)
@@ -2165,7 +2165,7 @@ var app = function () {
             };
             n && (o.headers = {
                 "Content-Type": "application/json"
-            }), console.log(o), fetch("http://localhost:8000" + e, o).then(e => e.json()).then(e => {
+            }), console.log(o), fetch(e, o).then(e => e.json()).then(e => {
                 console.log("answer"), e.error ? l || "NoAuth" !== e.message ? r(e) : (console.log("Logged out"), alert("Du har blivit utloggad"), de.set("authenticate")) : (r(e), console.log(e))
             }).catch(e => a(e))
         })
