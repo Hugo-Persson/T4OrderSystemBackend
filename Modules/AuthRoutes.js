@@ -17,11 +17,13 @@ module.exports = app => {
                 name,
                 email
             } = req.body;
-            if (checkIfEmailExists(email)) {
+            if (await checkIfEmailExists(email)) {
+                console.log("Register email exists");
                 res.json({
                     error: true,
                     message: "AccountExists"
                 });
+                return;
             }
 
             const verificationCode = await getVerificationCode(email);
