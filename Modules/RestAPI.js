@@ -18,6 +18,7 @@ module.exports = () => {
     const cookieParser = require("cookie-parser");
     const multer = require("multer");
     const bcrypt = require("bcryptjs");
+    const fs = require("fs");
     const upload = multer({
         dest: "uploads/"
     })
@@ -227,7 +228,8 @@ module.exports = () => {
             const order = await Order.findOne({
                 _id: searchId
             });
-
+            // Deletes files
+            order.files.map(file => fs.unlinkSync(process.cwd() + "/" + file.path));
             await order.delete();
             res.json({
                 error: false
