@@ -32,15 +32,18 @@ module.exports = app => {
                 type: "verifyRegistration",
                 name: name,
                 email: email,
-                verificationCode: verificationCode
+                verificationCode: verificationCode,
+                failedAttempts: 0
+
             };
-            console.log(verificationCode);
-            const token = await authentication.createJsonToken(tokenData);
+            const token = await authentication.createJsonToken(tokenData, 1200000);
+            res.cookie("verificationToken", token, {
+                httpOnly: true,
+                expires: new Date(Date.now() + 1200000), //20 minutes
+
+            });
             res.json({
                 error: false,
-                data: {
-                    token: token
-                },
                 message: "Verify your email"
             });
         } catch (err) {
@@ -69,24 +72,24 @@ module.exports = app => {
                 });
                 return;
             }
-            /* const user = await User.findOne({
-                email: email
-            }); */
             const verificationCode = await getVerificationCode(email);
             console.log("Ver code", verificationCode);
             const token = await authentication.createJsonToken({
                 type: "verifyLogin",
                 email: email,
-                verificationCode: verificationCode
-            });
+                verificationCode: verificationCode,
+                failedAttempts: 0
+            }, 1200000);
+            res.cookie("verificationToken", token, {
+                httpOnly: true,
+                expires: new Date(Date.now() + 1200000), //20 minutes
 
+            });
             res.json({
                 error: false,
                 message: "Email sent with verification code",
-                data: {
-                    token: token
-                }
             });
+
 
 
         } catch (err) {
@@ -100,13 +103,14 @@ module.exports = app => {
         console.log("verify with code");
         try {
             const {
-                token,
                 verificationCode
             } = req.body;
+            const token = req.cookies.verificationCode;
+
             if (token === undefined) {
                 res.json({
                     error: true,
-                    message: "Token was undefined"
+                    message: "NoToken"
                 });
                 return;
             }
@@ -114,10 +118,19 @@ module.exports = app => {
             const {
                 email,
                 name,
-                type
+                type,
+                failedAttempts
             } = tokenData;
 
             if (!await bcrypt.compare(verificationCode, tokenData.verificationCode)) {
+                failedAttempts += 1;
+                if (failedAttempts > 20) {
+                    res.json({
+                        error: true,
+                        message: "TooManyWrongs"
+                    });
+                    return;
+                }
                 res.json({
                     error: true,
                     message: "WrongCode"
@@ -139,7 +152,6 @@ module.exports = app => {
             const user = await User.findOne({
                 email: email
             });
-            console.log("user", user);
             const authToken = await authentication.createAuthToken(email, user.admin);
             res.cookie("auth", authToken, {
                 httpOnly: true,

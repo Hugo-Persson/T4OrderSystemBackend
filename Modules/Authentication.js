@@ -12,10 +12,11 @@ const expirationTime = process.env.EXPIRATIONTIME;
 async function generateHashedPassword() {
     console.log(process.env.MONGOURL)
 }
-async function createJsonToken(data) {
+async function createJsonToken(data, manualExpirationTime) {
+
     return new Promise((resolve, reject) => {
         const token = jwt.sign(data, tokenSecret, {
-            expiresIn: expirationTime
+            expiresIn: manualExpirationTime || expirationTime
         });
         resolve(token);
     });
