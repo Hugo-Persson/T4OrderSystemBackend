@@ -3,6 +3,7 @@ module.exports = app => {
     const sendEmail = require("./Email");
     const models = require("./MongooseModels");
     const bcrypt = require("bcryptjs");
+    const crypto = require("crypto");
 
     const {
         User,
@@ -161,7 +162,7 @@ module.exports = app => {
     async function getVerificationCode(email) {
         return new Promise(async (resolve, reject) => {
             try {
-                const code = Math.round(Math.random() * 1000000);
+                const code = crypto.randomBytes(3).toString("hex");
                 console.log("verCode", code);
                 const info = await sendEmail.sendVerificationCode(email, code);
 
