@@ -61,11 +61,8 @@ module.exports = app => {
             const {
                 email
             } = req.body;
-            console.log(email);
-
-            console.log(req.body);
             if (!await checkIfEmailExists(email)) {
-                console.log("email doesn't exist")
+                console.log("account doesn't exist")
                 res.json({
                     error: true,
                     message: "NoAccount"
@@ -105,8 +102,7 @@ module.exports = app => {
             const {
                 verificationCode
             } = req.body;
-            const token = req.cookies.verificationCode;
-
+            const token = req.cookies.verificationToken;
             if (token === undefined) {
                 res.json({
                     error: true,
@@ -151,7 +147,7 @@ module.exports = app => {
 
             const user = await User.findOne({
                 email: email
-            });
+            }).lean();
             const authToken = await authentication.createAuthToken(email, user.admin);
             res.cookie("auth", authToken, {
                 httpOnly: true,
@@ -160,7 +156,8 @@ module.exports = app => {
             });
             res.json({
                 error: false,
-                admin: user.admin
+                user: user
+
             });
 
         } catch (err) {
