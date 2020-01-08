@@ -31,10 +31,8 @@ async function encrypt(data) {
             const salt = await bcrypt.genSalt(10);
             // I need to make sure that the data is a string
             const encryptString = "" + data;
-            console.log("encryptString", encryptString);
-
-            const hashedPassword = await bcrypt.hash(encryptString, salt);
-            resolve(hashedPassword);
+            const hashedData = await bcrypt.hash(encryptString, salt);
+            resolve(hashedData);
         } catch (err) {
             console.log(err)
             reject(err);

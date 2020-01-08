@@ -12,7 +12,7 @@ module.exports = () => {
     const fs = require("fs");
     const upload = multer({
         dest: "uploads/"
-    })
+    });
 
 
     startExpress();
@@ -94,7 +94,7 @@ module.exports = () => {
                     originalName: value.originalname,
                     description: fileDescriptions[index]
                 }
-            })
+            });
             const order = new Order({
                 productName: productName,
                 customer: {
@@ -182,11 +182,10 @@ module.exports = () => {
                 originalName
             } = tokenData;
             res.download(path, originalName);
-
         } catch (err) {
             console.log(err)
+            res.send("Fel, försök igen senare")
         }
-
     });
     app.post("/updateOrder", async (req, res) => {
         console.log("Update order");

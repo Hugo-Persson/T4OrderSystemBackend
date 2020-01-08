@@ -125,6 +125,7 @@ module.exports = app => {
                         error: true,
                         message: "TooManyWrongs"
                     });
+                    res.clearCookie("verificationToken");
                     return;
                 }
                 res.json({
@@ -172,9 +173,7 @@ module.exports = app => {
         return new Promise(async (resolve, reject) => {
             try {
                 const code = crypto.randomBytes(3).toString("hex");
-                console.log("verCode", code);
-                const info = await sendEmail.sendVerificationCode(email, code);
-
+                await sendEmail.sendVerificationCode(email, code);
                 const encryptedCode = await authentication.encrypt(code);
                 resolve(encryptedCode);
             } catch (err) {
