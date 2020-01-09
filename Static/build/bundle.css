@@ -1,6 +1,7 @@
 main.svelte-dyk83x{width:100vw;height:100vh}
 main.svelte-1r1bdcq{text-align:center;height:100%;width:100%;padding:3% 0 3% 0;position:absolute}#login.svelte-1r1bdcq{padding:1%;margin:auto;height:55vh;background-color:white;display:inline-block;border-radius:8px;position:relative}@media(min-width: 576px){#login.svelte-1r1bdcq{width:95%}}@media(min-width: 768px){#login.svelte-1r1bdcq{width:60%}}@media(min-width: 992px){#login.svelte-1r1bdcq{width:30%}}#progressContainer.svelte-1r1bdcq{position:absolute;bottom:10px;width:92%}.spinner-border.svelte-1r1bdcq{margin:10px}.progress.svelte-1r1bdcq{position:initial}.alert.svelte-1r1bdcq{top:0px;position:absolute;width:100%}
 form.svelte-1lxf9ux{width:80%;margin:auto;margin-top:20px}
+main.svelte-1cplefx{text-align:center;height:100%;width:100%;position:absolute;color:white}#load.svelte-1cplefx{position:absolute;top:20%;left:42%}
 tr.svelte-1n1kl2d{cursor:pointer}
 
 /*# sourceMappingURL=bundle.css.map */
