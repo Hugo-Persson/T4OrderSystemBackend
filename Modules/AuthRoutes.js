@@ -40,6 +40,7 @@ module.exports = app => {
             res.cookie("verificationToken", token, {
                 httpOnly: true,
                 expires: new Date(Date.now() + 1200000), //20 minutes
+                sameSite: true
 
             });
             res.json({
@@ -80,6 +81,7 @@ module.exports = app => {
             res.cookie("verificationToken", token, {
                 httpOnly: true,
                 expires: new Date(Date.now() + 1200000), //20 minutes
+                sameSite: true
 
             });
             res.json({
@@ -153,6 +155,7 @@ module.exports = app => {
             res.cookie("auth", authToken, {
                 httpOnly: true,
                 expires: new Date(Date.now() + 2 * 3600000),
+                sameSite: true
 
             });
             res.json({
