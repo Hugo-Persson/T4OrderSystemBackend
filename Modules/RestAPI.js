@@ -277,10 +277,18 @@ module.exports = () => {
     });
     app.post("/toggleUserAdmin", verifyAuth, checkAdminAuth, async (req, res) => {
         try {
+            const authData = await authentication.decodeJsonToken(req.cookies.auth);
             const id = req.body.id;
             const user = await User.findOne({
                 _id: mongoose.Types.ObjectId(id)
             });
+            if (user.email === authData.email) {
+                res.json({
+                    error: true,
+                    message: "NoAdminYou"
+                });
+                return;
+            }
             user.admin = !user.admin;
             await user.save();
             res.json({

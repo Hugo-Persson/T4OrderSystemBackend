@@ -27,7 +27,7 @@ function codeEmailBody(code) {
     // This just creates the body for the email that the user will see when they get the code
     return `
     <div>
-    <h2><b>Your verification code is <span style="text-decoration:underline">${code}</span></b></h2>
+    <h2><b>Din verifikations kod är: <span style="text-decoration:underline">${code}</span></b></h2>
 
     </div>
     `
