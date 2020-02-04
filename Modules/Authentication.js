@@ -15,6 +15,12 @@ async function generateHashedPassword() {
 async function createJsonToken(data, manualExpirationTime) {
 
     return new Promise((resolve, reject) => {
+
+        if (data.exp) {
+            const token = jwt.sign(data, tokenSecret);
+            resolve(token);
+            return;
+        }
         const token = jwt.sign(data, tokenSecret, {
             expiresIn: manualExpirationTime || expirationTime
         });

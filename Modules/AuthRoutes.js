@@ -121,8 +121,19 @@ module.exports = app => {
             } = tokenData;
 
             if (!await bcrypt.compare(verificationCode, tokenData.verificationCode)) {
-                failedAttempts += 1;
-                if (failedAttempts > 20) {
+                tokenData.failedAttempts += 1;
+                console.log(tokenData);
+                const token = await authentication.createJsonToken(tokenData)
+                res.cookie("verificationToken", token, {
+                    httpOnly: true,
+                    expires: new Date(Date.now() + 1200000), //20 minutes
+                    sameSite: "strict"
+
+                });
+
+
+
+                if (tokenData.failedAttempts > 15) {
                     res.json({
                         error: true,
                         message: "TooManyWrongs"
