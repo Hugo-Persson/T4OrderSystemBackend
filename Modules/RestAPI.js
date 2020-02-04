@@ -261,10 +261,18 @@ module.exports = () => {
 
     app.post("/deleteUser", verifyAuth, checkAdminAuth, async (req, res) => {
         try {
+            const authData = await authentication.decodeJsonToken(req.cookies.auth);
             const id = req.body.id;
             const user = await User.deleteOne({
                 _id: mongoose.Types.ObjectId(id)
             });
+            if (user.email === authData.email) {
+                res.json({
+                    error: true,
+                    message: "NoDeleteYou"
+                });
+                return;
+            }
             res.json({
                 error: false
             });
