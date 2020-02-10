@@ -344,7 +344,26 @@ module.exports = () => {
     async function checkAdminAuth(req, res, next) {
         try {
             const authData = await authentication.decodeJsonToken(req.cookies.auth);
-            console.log(authData);
+
+            const user = await User.findOne({
+                email: authData.email
+            });
+
+            if (!user.active) {
+                res.json({
+                    error: true,
+                    message: "NotActive"
+                });
+                return;
+            }
+            if (!user.admin) {
+                res.json({
+                    error: true,
+                    message: "NotAdmin"
+                });
+                return;
+            }
+
             if (authData.admin) {
                 next();
             } else {
@@ -367,6 +386,19 @@ module.exports = () => {
                 return;
             }
             const authData = await authentication.decodeJsonToken(req.cookies.auth);
+
+            const user = await User.findOne({
+                email: authData.email
+            });
+
+            if (!user) {
+                res.json({
+                    error: true,
+                    message: "NoAccount"
+                });
+                return;
+            }
+
             if (authData.type === "auth") {
                 next();
                 return;

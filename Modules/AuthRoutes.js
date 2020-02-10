@@ -159,6 +159,7 @@ module.exports = app => {
 
             }
 
+            // Code checkes out
             const user = await User.findOne({
                 email: email
             }).lean();

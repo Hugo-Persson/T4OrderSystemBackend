@@ -9,6 +9,10 @@ const userSchema = new Schema({
     name: String,
     email: String,
     admin: Boolean,
+    active: {
+        type: Boolean,
+        default: true
+    },
     accessibleOrders: [String]
 });
 
