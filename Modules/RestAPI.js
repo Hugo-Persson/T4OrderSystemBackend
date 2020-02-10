@@ -263,7 +263,7 @@ module.exports = () => {
         try {
             const authData = await authentication.decodeJsonToken(req.cookies.auth);
             const id = req.body.id;
-            const user = await User.deleteOne({
+            const user = await User.findOne({
                 _id: mongoose.Types.ObjectId(id)
             });
             if (user.email === authData.email) {
@@ -273,6 +273,8 @@ module.exports = () => {
                 });
                 return;
             }
+            await user.remove();
+
             res.json({
                 error: false
             });
