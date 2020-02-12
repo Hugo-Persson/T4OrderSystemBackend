@@ -192,15 +192,33 @@ module.exports = () => {
         const {
             id,
             email,
-            name
+            status,
+            estimatedFinishDate
         } = req.body;
         try {
+            console.log("start");
+            let user = {};
+            if (email === "Nobody") {
+
+                user.name = "Ingen";
+                user.email = "Nobody";
+            } else {
+                user = await User.findOne({
+                    email: email
+                });
+            }
+
+
+
             const order = await Order.findOne({
                 _id: mongoose.Types.ObjectId(id)
             });
-            order.name = name;
-            order.email = email;
+            order.status = status;
+            order.name = user.name;
+            order.email = user.email;
+            order.estimatedFinishDate = estimatedFinishDate;
             await order.save();
+            console.log("Done");
             res.json({
                 error: false
             });
@@ -338,6 +356,21 @@ module.exports = () => {
         }
     });
 
+    app.post("/getAllAdmins", verifyAuth, checkAdminAuth, async (req, res) => {
+        try {
+            const allAdmins = await User.find({
+                admin: true
+            }).lean();
+            res.json({
+                error: false,
+                allAdmins: allAdmins
+            });
+        } catch (err) {
+            console.log(err)
+        }
+    });
+
+
 
     /* Middleware */
 
@@ -417,4 +450,5 @@ module.exports = () => {
         }
 
     }
+
 }

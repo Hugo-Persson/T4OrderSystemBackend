@@ -24,6 +24,9 @@ const orderSchema = new Schema({
         type: Date,
         default: Date.now
     },
+    estimatedFinishDate: {
+        type: Date,
+    },
     productNumber: {
         type: Number,
         default: 0,
@@ -40,7 +43,7 @@ const orderSchema = new Schema({
         },
         email: {
             type: String,
-            default: ""
+            default: "Nobody"
         }
     },
     status: {
