@@ -214,8 +214,8 @@ module.exports = () => {
                 _id: mongoose.Types.ObjectId(id)
             });
             order.status = status;
-            order.name = user.name;
-            order.email = user.email;
+            order.responsible.name = user.name;
+            order.responsible.email = user.email;
             order.estimatedFinishDate = estimatedFinishDate;
             await order.save();
             console.log("Done");
