@@ -284,6 +284,8 @@ module.exports = () => {
             const user = await User.findOne({
                 _id: mongoose.Types.ObjectId(id)
             });
+
+
             if (user.email === authData.email) {
                 res.json({
                     error: true,
@@ -291,7 +293,20 @@ module.exports = () => {
                 });
                 return;
             }
-            await user.remove();
+
+            if (user.admin) {
+                if (user.active) {
+                    user.active = false;
+
+                } else {
+                    user.active = true;
+                }
+                await user.save();
+            } else {
+                await user.remove();
+            }
+
+
 
             res.json({
                 error: false

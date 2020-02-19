@@ -62,11 +62,23 @@ module.exports = app => {
             const {
                 email
             } = req.body;
-            if (!await checkIfEmailExists(email)) {
+
+            const user = await User.findOne({
+                email: email
+            });
+
+            if (!user) {
                 console.log("account doesn't exist")
                 res.json({
                     error: true,
                     message: "NoAccount"
+                });
+                return;
+            }
+            if (!user.active) {
+                res.json({
+                    error: true,
+                    message: "NotActive"
                 });
                 return;
             }
@@ -197,17 +209,6 @@ module.exports = app => {
             }
         })
 
-    }
-    async function checkIfEmailExists(email) {
-        try {
-            const user = await User.findOne({
-                email: email
-            });
-            console.log(Boolean(user));
-            return Boolean(user);
-        } catch (err) {
-            console.log(err);
-        }
     }
 
     function createAccount(email, name, admin) {
