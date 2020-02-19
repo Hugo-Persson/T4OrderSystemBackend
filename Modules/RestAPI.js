@@ -332,6 +332,7 @@ module.exports = () => {
                 });
                 return;
             }
+            user.active = true;
             user.admin = !user.admin;
             await user.save();
             res.json({
