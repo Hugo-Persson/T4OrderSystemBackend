@@ -383,6 +383,72 @@ module.exports = () => {
             });
         } catch (err) {
             console.log(err)
+            res.json({
+                error: true,
+                message: "UnknownError"
+            });
+        }
+    });
+
+    app.post("/updateAccount", verifyAuth, async (req, res) => {
+        try {
+            const {
+                email,
+                name
+            } = req.body.user;
+            let currentEmail = await authentication.decodeJsonToken(req.cookies.auth);
+            if (currentEmail !== email) {
+                const checkIfExistUser = await User.findOne({
+                    email: email
+                });
+                if (!checkAdminAuth) {
+                    res.json({
+                        error: true,
+                        message: "AccountExists"
+                    });
+                    return;
+                }
+            }
+            currentEmail = currentEmail.email;
+            console.log("CUrrentEma", currentEmail);
+            const user = await User.findOne({
+                email: currentEmail
+            });
+            user.email = email;
+            user.name = name;
+            const responsibleOrders = await Order.find({
+                responsible: {
+                    email: currentEmail
+                }
+            });
+            const customerOrders = await Order.find({
+                customer: {
+                    email: currentEmail
+                }
+            });
+
+            const wait = [...responsibleOrders, ...customerOrders].map(i => {
+                i.responsible.email = email;
+                i.responsible.name = name;
+                return i.save();
+            });
+            await Promise.all(wait);
+            await user.save();
+            res.json({
+                error: false,
+                user: {
+                    name: user.name,
+                    email: user.email
+                }
+            });
+
+        } catch (err) {
+            console.log(err)
+            res.json({
+                error: true,
+                message: "UnknownError"
+            });
+
         }
     });
 
