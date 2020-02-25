@@ -10,6 +10,8 @@ module.exports = () => {
     const multer = require("multer");
     const bcrypt = require("bcryptjs");
     const fs = require("fs");
+    const emailModule = require("./Email");
+    const crypto = require("crypto");
     const upload = multer({
         dest: "uploads/"
     });
@@ -390,57 +392,101 @@ module.exports = () => {
         }
     });
 
-    app.post("/updateAccount", verifyAuth, async (req, res) => {
+
+
+    app.post("/verifyUpdateEmail", async (req, res) => {
         try {
             const {
-                email,
-                name
+                verificationCode
+            } = req.body;
+            const {
+                changeEmailToken
+            } = req.cookies;
+            if (!changeEmailToken) {
+                res.json({
+                    error: true,
+                    message: "NoToken"
+                });
+                return;
+            }
+            if (!verificationCode) {
+                res.json({
+                    error: true,
+                    message: "NoVerificationCode"
+                });
+                return;
+            }
+            const tokenData = await authentication.decodeJsonToken(changeEmailToken);
+            if (!await bcrypt.compare(verificationCode, tokenData.verificationCode)) {
+                res.json({
+                    error: true,
+                    message: "WrongCode"
+                });
+            }
+
+            const authData = await authentication.decodeJsonToken(req.cookies.auth);
+            const user = await User.findOne({
+                email: authData.email
+            });
+
+            res.json(await updateUser(user.name, authData.email, user));
+        } catch (err) {
+            console.log(err)
+            res.json({
+                error: true
+            });
+        }
+
+    });
+
+
+
+    app.post("/updateUser", verifyAuth, async (req, res) => {
+        try {
+            const {
+                name,
+                email
             } = req.body.user;
-            let currentEmail = await authentication.decodeJsonToken(req.cookies.auth);
-            if (currentEmail !== email) {
-                const checkIfExistUser = await User.findOne({
+
+            const authData = await authentication.decodeJsonToken(req.cookies.auth);
+
+            const user = await User.findOne({
+                email: authData.email
+            });
+            console.log("Check done");
+            if (authData.email === email) {
+                res.json(await updateUser(name, user.email, user));
+            } else {
+                console.log("Change email");
+                const newEmailAccountExists = await User.findOne({
                     email: email
                 });
-                if (!checkAdminAuth) {
+                if (newEmailAccountExists) {
                     res.json({
                         error: true,
                         message: "AccountExists"
                     });
                     return;
                 }
-            }
-            currentEmail = currentEmail.email;
-            console.log("CUrrentEma", currentEmail);
-            const user = await User.findOne({
-                email: currentEmail
-            });
-            user.email = email;
-            user.name = name;
-            const responsibleOrders = await Order.find({
-                responsible: {
-                    email: currentEmail
-                }
-            });
-            const customerOrders = await Order.find({
-                customer: {
-                    email: currentEmail
-                }
-            });
 
-            const wait = [...responsibleOrders, ...customerOrders].map(i => {
-                i.responsible.email = email;
-                i.responsible.name = name;
-                return i.save();
-            });
-            await Promise.all(wait);
-            await user.save();
-            res.json({
-                error: false,
-                user: {
-                    name: user.name,
-                    email: user.email
-                }
-            });
+                const code = crypto.randomBytes(3).toString("hex");
+                await emailModule.sendVerificationCode(email, code);
+                const encryptedCode = await authentication.encrypt(code);
+                const token = authentication.createJsonToken({
+                    verificationCode: encryptedCode,
+                    changeToEmail: email
+                });
+                res.cookie("verificationToken", token, {
+                    httpOnly: true,
+                    expires: new Date(Date.now() + 1200000), //20 minutes
+                    sameSite: "strict"
+
+                });
+                res.json({
+                    error: false,
+                    message: "VerifyEmail"
+                });
+            }
 
         } catch (err) {
             console.log(err)
@@ -452,7 +498,35 @@ module.exports = () => {
         }
     });
 
+    async function updateUser(name, email, currentUser) {
+        currentUser.email = email;
+        currentUser.name = name;
+        const responsibleOrders = await Order.find({
+            responsible: {
+                email: currentUser.email
+            }
+        });
+        const customerOrders = await Order.find({
+            customer: {
+                email: currentUser.email
+            }
+        });
 
+        const wait = [...responsibleOrders, ...customerOrders].map(i => {
+            i.responsible.email = email;
+            i.responsible.name = name;
+            return i.save();
+        });
+        await Promise.all(wait);
+        await user.save();
+        return {
+            error: false,
+            user: {
+                name: currentUser.name,
+                email: currentUser.email
+            }
+        };
+    }
 
     /* Middleware */
 
