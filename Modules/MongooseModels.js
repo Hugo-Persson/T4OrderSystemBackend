@@ -44,6 +44,10 @@ const orderSchema = new Schema({
         email: {
             type: String,
             default: "Nobody"
+        },
+        active: {
+            type: Boolean,
+            default: true
         }
     },
     status: {

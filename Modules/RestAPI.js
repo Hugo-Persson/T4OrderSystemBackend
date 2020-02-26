@@ -299,9 +299,11 @@ module.exports = () => {
             if (user.admin) {
                 if (user.active) {
                     user.active = false;
+                    await toggleAllResponsibleOrders();
 
                 } else {
                     user.active = true;
+                    await toggleAllResponsibleOrders();
                 }
                 await user.save();
             } else {
@@ -320,6 +322,12 @@ module.exports = () => {
             });
         }
     });
+
+    function toggleAllResponsibleOrders(email) {
+        return new Promise(resolve => {
+
+        });
+    }
     app.post("/toggleUserAdmin", verifyAuth, checkAdminAuth, async (req, res) => {
         try {
             const authData = await authentication.decodeJsonToken(req.cookies.auth);
