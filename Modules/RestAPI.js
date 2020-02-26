@@ -279,7 +279,7 @@ module.exports = () => {
         }
     });
 
-    app.post("/deleteUser", verifyAuth, checkAdminAuth, async (req, res) => {
+    app.post("/toggleUserExistence", verifyAuth, checkAdminAuth, async (req, res) => {
         try {
             const authData = await authentication.decodeJsonToken(req.cookies.auth);
             const id = req.body.id;
@@ -374,23 +374,7 @@ module.exports = () => {
         }
     });
 
-    app.post("/getAllAdmins", verifyAuth, checkAdminAuth, async (req, res) => {
-        try {
-            const allAdmins = await User.find({
-                admin: true
-            }).lean();
-            res.json({
-                error: false,
-                allAdmins: allAdmins
-            });
-        } catch (err) {
-            console.log(err)
-            res.json({
-                error: true,
-                message: "UnknownError"
-            });
-        }
-    });
+
 
 
 
