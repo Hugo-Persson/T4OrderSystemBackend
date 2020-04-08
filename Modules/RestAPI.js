@@ -324,7 +324,18 @@ module.exports = () => {
     });
 
     function toggleAllResponsibleOrders(email) {
-        return new Promise(resolve => {
+        return new Promise(async resolve => {
+            const orders = await Order.find({
+                responsible: {
+                    email: email
+                }
+            });
+            const promises = orders.map(i => {
+                i.responsible.active = !i.responsible.active;
+                return i.save();
+            })
+            await Promise.all(promises);
+            resolve();
 
         });
     }

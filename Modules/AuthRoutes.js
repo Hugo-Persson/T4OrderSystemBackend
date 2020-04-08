@@ -13,7 +13,7 @@ module.exports = app => {
     app.post("/registerUser", async (req, res) => {
         console.log("registerUser", req.body);
         try {
-
+            req.body.email = req.body.email.toLowerCase();
             const {
                 name,
                 email
@@ -59,6 +59,7 @@ module.exports = app => {
     app.post("/login", async (req, res) => {
         console.log("login")
         try {
+            req.body.email = req.body.email.toLowerCase();
             const {
                 email
             } = req.body;
