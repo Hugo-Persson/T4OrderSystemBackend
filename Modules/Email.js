@@ -4,6 +4,8 @@ module.exports = {
     sendVerificationCode: sendVerificationCode
 }
 // Here you set the email credentials 
+console.log("USER", process.env.EMAILUSER);
+console.log("PASS", process.env.EMAILPASS);
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
