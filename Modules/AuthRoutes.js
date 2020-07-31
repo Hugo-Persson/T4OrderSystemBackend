@@ -10,6 +10,7 @@ module.exports = app => {
         Order
     } = models;
 
+
     app.post("/registerUser", async (req, res) => {
         console.log("registerUser", req.body);
         try {
@@ -18,7 +19,9 @@ module.exports = app => {
                 name,
                 email
             } = req.body;
-            if (await checkIfEmailExists(email)) {
+            if (await User.findOne({
+                    email: email
+                })) {
                 console.log("Register email exists");
                 res.json({
                     error: true,
