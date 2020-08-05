@@ -80,7 +80,10 @@ module.exports = app => {
 
                 });
                 console.log("HEYEE")
-                res.json
+                res.json({
+                    error: false,
+                    message: "refresh"
+                });
                 return;
             }
             if (!user) {
